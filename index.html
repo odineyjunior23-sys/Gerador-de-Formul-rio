@@ -433,6 +433,7 @@
             <input id="form-link" type="text" readonly aria-label="Link do formulário" />
             <button id="copy-link" class="secondary-button" type="button">Copiar</button>
           </div>
+          <button id="print-qr" class="primary-button" type="button">&#128438; Imprimir QR Code</button>
         </div>
 
         <div class="records-card">
@@ -543,6 +544,7 @@
       const exportWordButton = document.querySelector('#export-word');
       const exportExcelButton = document.querySelector('#export-excel');
       const exportPdfButton = document.querySelector('#export-pdf');
+      const printQrButton = document.querySelector('#print-qr');
 
       const STORAGE_KEY = 'qr-registration-submissions-html';
 
@@ -689,6 +691,97 @@
             `,
           )
           .join('');
+      }
+
+      // Insere uma linha instantaneamente na tabela sem precisar recarregar do Supabase
+      function addRowToTable(item) {
+        // Remove mensagem de "nenhum preenchimento" se existir
+        const emptyRow = recordsBody.querySelector('td[colspan]');
+        if (emptyRow) emptyRow.closest('tr').remove();
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(item.fullName)}</td>
+          <td>${escapeHtml(item.institution)}</td>
+          <td>${escapeHtml(item.period)}</td>
+        `;
+        // Insere no topo da tabela (mais recente primeiro)
+        recordsBody.insertBefore(tr, recordsBody.firstChild);
+      }
+
+      // Imprime apenas o QR Code com título e data do evento
+      function printQrCode() {
+        const qrCanvas = qrBox.querySelector('canvas');
+        const qrImg    = qrBox.querySelector('img');
+        const imgSrc   = qrCanvas
+          ? qrCanvas.toDataURL('image/png')
+          : qrImg ? qrImg.src : '';
+
+        const title = titleInput.value.trim();
+        const date  = formatDate(dateInput.value);
+        const link  = formLinkInput.value;
+
+        const win = window.open('', '_blank');
+        win.document.write(`
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="UTF-8" />
+              <title>QR Code - ${escapeHtml(title)}</title>
+              <style>
+                body {
+                  margin: 0;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  min-height: 100vh;
+                  font-family: Arial, sans-serif;
+                  color: #17212b;
+                  text-align: center;
+                  padding: 32px;
+                }
+                img.logo {
+                  width: 340px;
+                  max-width: 90%;
+                  margin-bottom: 24px;
+                  border-radius: 8px;
+                }
+                h1 { font-size: 22px; margin: 0 0 4px; }
+                p  { margin: 0 0 20px; color: #5d6b78; font-size: 14px; }
+                img.qr {
+                  width: 260px;
+                  height: 260px;
+                  border: 1px solid #d7dee6;
+                  border-radius: 8px;
+                  padding: 10px;
+                  background: #fff;
+                }
+                .link {
+                  margin-top: 14px;
+                  font-size: 11px;
+                  color: #5d6b78;
+                  word-break: break-all;
+                  max-width: 320px;
+                }
+                @media print {
+                  @page { margin: 10mm; }
+                }
+              </style>
+            </head>
+            <body>
+              <img class="logo" src="${window.location.origin}/assets/logo.png"
+                   onerror="this.style.display='none'"
+                   alt="Prefeitura de Maracaju" />
+              <h1>${escapeHtml(title)}</h1>
+              <p>Data: ${escapeHtml(date)}</p>
+              ${imgSrc ? `<img class="qr" src="${imgSrc}" alt="QR Code" />` : '<p>QR Code não disponível</p>'}
+              <div class="link">${escapeHtml(link)}</div>
+              <script>window.onload = () => { window.print(); };<\/script>
+            </body>
+          </html>
+        `);
+        win.document.close();
       }
 
       async function exportCsv() {
@@ -870,7 +963,7 @@
         const formData = new FormData(participantForm);
         const { title, date } = readQueryData();
 
-        await saveSubmission({
+        const submission = {
           eventTitle: titleInput.value.trim() || title,
           eventDate: dateInput.value || date,
           fullName: formData.get('fullName'),
@@ -878,17 +971,24 @@
           role: formData.get('role'),
           email: formData.get('email'),
           period: formData.get('period'),
-        });
+        };
+
+        // Insere na tabela imediatamente (sem esperar o Supabase)
+        addRowToTable(submission);
 
         participantForm.reset();
-        successMessage.textContent = 'Preenchimento enviado com sucesso.';
+        successMessage.textContent = 'Preenchimento enviado com sucesso!';
         successMessage.classList.remove('is-hidden');
-        await renderSubmissions();
+        setTimeout(() => successMessage.classList.add('is-hidden'), 4000);
+
+        // Salva no Supabase em segundo plano
+        await saveSubmission(submission);
       });
 
       exportWordButton.addEventListener('click', exportWord);
       exportExcelButton.addEventListener('click', exportExcel);
       exportPdfButton.addEventListener('click', exportPdf);
+      printQrButton.addEventListener('click', printQrCode);
 
       const queryData = readQueryData();
       if (queryData.title || queryData.date) {
