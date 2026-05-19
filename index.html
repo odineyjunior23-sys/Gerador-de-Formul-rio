@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Preenchimento por QR Code</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17212b;
+        --muted: #5d6b78;
+        --line: #d7dee6;
+        --paper: #f6f8fb;
+        --accent: #004a98;
+        --accent-dark: #00346f;
+        --accent-soft: #dcecff;
+        --shadow: 0 22px 55px rgba(23, 33, 43, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--ink);
+        background:
+          linear-gradient(135deg, rgba(0, 74, 152, 0.14), transparent 35%),
+          linear-gradient(315deg, rgba(183, 121, 31, 0.12), transparent 40%),
+          var(--paper);
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .app-shell {
+        width: min(1180px, calc(100% - 32px));
+        min-height: 100vh;
+        margin: 0 auto;
+        padding: 32px 0;
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      body.public-mode .app-shell {
+        max-width: 680px;
+        grid-template-columns: 1fr;
+        align-items: center;
+      }
+
+      body.public-mode .organizer-panel {
+        display: none;
+      }
+
+      .panel {
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(215, 222, 230, 0.9);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+      }
+
+      .brand-row {
+        display: grid;
+        gap: 16px;
+        margin-bottom: 26px;
+      }
+
+      .brand-logo {
+        width: 100%;
+        max-height: 180px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #003f8f;
+      }
+
+      .eyebrow {
+        margin: 0 0 6px;
+        color: var(--accent);
+        font-size: 0.76rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(1.8rem, 3vw, 2.7rem);
+        line-height: 1.04;
+      }
+
+      h2 {
+        font-size: 1.55rem;
+        line-height: 1.15;
+      }
+
+      .stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      label,
+      fieldset {
+        display: grid;
+        gap: 8px;
+      }
+
+      label span,
+      legend {
+        color: var(--ink);
+        font-weight: 700;
+      }
+
+      input[type='text'],
+      input[type='email'],
+      input[type='date'] {
+        width: 100%;
+        min-height: 48px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+        outline: none;
+      }
+
+      input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px var(--accent-soft);
+      }
+
+      .primary-button,
+      .secondary-button {
+        min-height: 48px;
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      .primary-button {
+        width: 100%;
+        padding: 0 18px;
+        background: var(--accent);
+        color: white;
+      }
+
+      .primary-button:hover {
+        background: var(--accent-dark);
+      }
+
+      .secondary-button {
+        padding: 0 16px;
+        background: var(--accent);
+        color: white;
+      }
+
+      .secondary-button:hover {
+        background: var(--accent-dark);
+      }
+
+      .qr-card,
+      .records-card {
+        margin-top: 24px;
+        padding: 20px;
+        display: grid;
+        gap: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fbfcfe;
+      }
+
+      .qr-box {
+        width: 220px;
+        min-height: 220px;
+        display: grid;
+        place-items: center;
+        justify-self: center;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: white;
+      }
+
+      .qr-box img,
+      .qr-box canvas {
+        max-width: 100%;
+        height: auto;
+      }
+
+      .link-row,
+      .records-heading {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .export-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .form-header {
+        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .form-header time {
+        display: inline-block;
+        margin-top: 10px;
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      fieldset {
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      .period-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .period-option {
+        position: relative;
+      }
+
+      .period-option input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+      }
+
+      .period-option span {
+        min-height: 48px;
+        display: grid;
+        place-items: center;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        text-align: center;
+        transition: 0.16s ease;
+      }
+
+      .period-option input:checked + span {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: white;
+      }
+
+      .success-message {
+        margin-top: 20px;
+        padding: 14px 16px;
+        border-radius: 8px;
+        background: #e8f1ff;
+        color: #00346f;
+        font-weight: 700;
+      }
+
+      .records-table-wrap {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+        min-width: 420px;
+      }
+
+      th,
+      td {
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+      }
+
+      .is-hidden {
+        display: none;
+      }
+
+      @media (min-width: 861px) and (max-width: 1100px) {
+        .app-shell {
+          width: min(100% - 24px, 900px);
+          grid-template-columns: 1fr 1fr;
+          gap: 18px;
+        }
+
+        .panel {
+          padding: 22px;
+        }
+
+        .brand-logo {
+          max-height: 145px;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .app-shell {
+          grid-template-columns: 1fr;
+          width: min(100% - 20px, 620px);
+          padding: 10px 0;
+        }
+
+        .panel {
+          padding: 20px;
+        }
+
+        .brand-logo {
+          max-height: 150px;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .period-grid,
+        .link-row,
+        .records-heading {
+          grid-template-columns: 1fr;
+        }
+
+        .export-actions {
+          justify-content: stretch;
+        }
+
+        .export-actions .secondary-button {
+          width: 100%;
+        }
+
+        .brand-row {
+          align-items: flex-start;
+        }
+
+        body {
+          background: var(--paper);
+        }
+
+        h1 {
+          font-size: 1.8rem;
+        }
+
+        h2 {
+          font-size: 1.35rem;
+        }
+
+        .panel {
+          padding: 16px;
+        }
+
+        .brand-logo {
+          max-height: 120px;
+        }
+
+        .qr-box {
+          width: 100%;
+          min-height: 0;
+          aspect-ratio: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="panel organizer-panel" aria-labelledby="config-title">
+        <div class="brand-row">
+          <img
+            class="brand-logo"
+            src="assets/logo.png"
+            alt="Prefeitura de Maracaju - Secretaria Municipal de Educação"
+          />
+          <div>
+            <p class="eyebrow">Controle de presença</p>
+            <h1 id="config-title">Gerador de formulário</h1>
+          </div>
+        </div>
+
+        <form id="event-form" class="stack">
+          <label>
+            <span>Título do preenchimento</span>
+            <input
+              id="event-title"
+              name="eventTitle"
+              type="text"
+              placeholder="Ex.: Encontro Pedagógico 2026"
+              autocomplete="off"
+              required
+            />
+          </label>
+
+          <label>
+            <span>Data</span>
+            <input id="event-date" name="eventDate" type="date" required />
+          </label>
+
+          <button class="primary-button" type="submit">Gerar QR Code</button>
+        </form>
+
+        <div id="qr-card" class="qr-card is-hidden" aria-live="polite">
+          <div>
+            <p class="eyebrow">Pronto para escanear</p>
+            <h2>Formulário publicado</h2>
+          </div>
+          <div id="qrcode" class="qr-box"></div>
+          <div class="link-row">
+            <input id="form-link" type="text" readonly aria-label="Link do formulário" />
+            <button id="copy-link" class="secondary-button" type="button">Copiar</button>
+          </div>
+        </div>
+
+        <div class="records-card">
+          <div class="records-heading">
+            <div>
+              <p class="eyebrow">Registros recebidos</p>
+              <h2>Participantes</h2>
+            </div>
+            <div class="export-actions" aria-label="Opções de exportação">
+              <button id="export-word" class="secondary-button" type="button">Word</button>
+              <button id="export-excel" class="secondary-button" type="button">Excel</button>
+              <button id="export-pdf" class="secondary-button" type="button">PDF</button>
+            </div>
+          </div>
+          <div class="records-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Instituição</th>
+                  <th>Período</th>
+                </tr>
+              </thead>
+              <tbody id="records-body">
+                <tr>
+                  <td colspan="3">Nenhum preenchimento recebido ainda.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel fill-panel" aria-labelledby="form-title">
+        <div class="form-header">
+          <p class="eyebrow">Formulário do participante</p>
+          <h2 id="form-title">Aguardando título</h2>
+          <time id="form-date">Defina a data para liberar o formulário</time>
+        </div>
+
+        <form id="participant-form" class="stack">
+          <label>
+            <span>Nome completo</span>
+            <input name="fullName" type="text" autocomplete="name" required />
+          </label>
+
+          <label>
+            <span>Instituição</span>
+            <input name="institution" type="text" autocomplete="organization" required />
+          </label>
+
+          <label>
+            <span>Cargo</span>
+            <input name="role" type="text" autocomplete="organization-title" required />
+          </label>
+
+          <label>
+            <span>E-mail</span>
+            <input name="email" type="email" autocomplete="email" required />
+          </label>
+
+          <fieldset>
+            <legend>Período</legend>
+            <div class="period-grid">
+              <label class="period-option">
+                <input type="radio" name="period" value="Matutino" required />
+                <span>Matutino</span>
+              </label>
+              <label class="period-option">
+                <input type="radio" name="period" value="Vespertino" />
+                <span>Vespertino</span>
+              </label>
+              <label class="period-option">
+                <input type="radio" name="period" value="Noturno" />
+                <span>Noturno</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <button class="primary-button" type="submit">Enviar preenchimento</button>
+        </form>
+
+        <div id="success-message" class="success-message is-hidden" role="status"></div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+      const eventForm = document.querySelector('#event-form');
+      const participantForm = document.querySelector('#participant-form');
+      const titleInput = document.querySelector('#event-title');
+      const dateInput = document.querySelector('#event-date');
+      const qrCard = document.querySelector('#qr-card');
+      const qrBox = document.querySelector('#qrcode');
+      const formLinkInput = document.querySelector('#form-link');
+      const copyButton = document.querySelector('#copy-link');
+      const formTitle = document.querySelector('#form-title');
+      const formDate = document.querySelector('#form-date');
+      const successMessage = document.querySelector('#success-message');
+      const recordsBody = document.querySelector('#records-body');
+      const exportWordButton = document.querySelector('#export-word');
+      const exportExcelButton = document.querySelector('#export-excel');
+      const exportPdfButton = document.querySelector('#export-pdf');
+
+      const STORAGE_KEY = 'qr-registration-submissions-html';
+
+      function formatDate(value) {
+        if (!value) return 'Data não informada';
+        const [year, month, day] = value.split('-');
+        return `${day}/${month}/${year}`;
+      }
+
+      function updatePublicHeader(title, date) {
+        formTitle.textContent = title || 'Aguardando título';
+        formDate.textContent = date
+          ? `Data: ${formatDate(date)}`
+          : 'Defina a data para liberar o formulário';
+      }
+
+      function buildFormUrl(title, date) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('titulo', title);
+        url.searchParams.set('data', date);
+        return url.toString();
+      }
+
+      function renderQrCode(url) {
+        qrBox.innerHTML = '';
+
+        if (window.QRCode) {
+          new QRCode(qrBox, {
+            text: url,
+            width: 200,
+            height: 200,
+            colorDark: '#17212b',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H,
+          });
+          return;
+        }
+
+        qrBox.textContent = 'Biblioteca de QR Code indisponível. Use o link abaixo.';
+      }
+
+      function readQueryData() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+          title: params.get('titulo') || '',
+          date: params.get('data') || '',
+        };
+      }
+
+      async function getSubmissions() {
+        try {
+          const response = await fetch('/api/submissions');
+          if (!response.ok) throw new Error(`API respondeu com status ${response.status}`);
+          return response.json();
+        } catch (error) {
+          console.warn('Usando registros locais porque o Supabase não respondeu:', error);
+          return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        }
+      }
+
+      async function saveSubmission(data) {
+        const payload = {
+          ...data,
+          submittedAt: new Date().toISOString(),
+        };
+
+        try {
+          const response = await fetch('/api/submissions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          if (!response.ok) throw new Error(`API respondeu com status ${response.status}`);
+        } catch (error) {
+          console.warn('Salvando localmente porque o Supabase não aceitou o registro:', error);
+          const submissions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          submissions.push(payload);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(submissions));
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      async function renderSubmissions() {
+        const submissions = await getSubmissions();
+
+        if (!submissions.length) {
+          recordsBody.innerHTML = '<tr><td colspan="3">Nenhum preenchimento recebido ainda.</td></tr>';
+          return;
+        }
+
+        recordsBody.innerHTML = submissions
+          .map(
+            (item) => `
+              <tr>
+                <td>${escapeHtml(item.fullName)}</td>
+                <td>${escapeHtml(item.institution)}</td>
+                <td>${escapeHtml(item.period)}</td>
+              </tr>
+            `,
+          )
+          .join('');
+      }
+
+      async function exportCsv() {
+        const headers = ['Título', 'Data', 'Nome completo', 'Instituição', 'Cargo', 'E-mail', 'Período'];
+        const rows = (await getSubmissions()).map((item) => [
+          item.eventTitle,
+          item.eventDate,
+          item.fullName,
+          item.institution,
+          item.role,
+          item.email,
+          item.period,
+        ]);
+        const csv = [headers, ...rows]
+          .map((row) => row.map((value) => `"${String(value || '').replaceAll('"', '""')}"`).join(','))
+          .join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'preenchimentos.csv';
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function buildExportTable(submissions) {
+        const rows = submissions.length
+          ? submissions
+              .map(
+                (item) => `
+                  <tr>
+                    <td>${escapeHtml(item.eventTitle)}</td>
+                    <td>${escapeHtml(formatDate(item.eventDate))}</td>
+                    <td>${escapeHtml(item.fullName)}</td>
+                    <td>${escapeHtml(item.institution)}</td>
+                    <td>${escapeHtml(item.role)}</td>
+                    <td>${escapeHtml(item.email)}</td>
+                    <td>${escapeHtml(item.period)}</td>
+                  </tr>
+                `,
+              )
+              .join('')
+          : '<tr><td colspan="7">Nenhum preenchimento recebido ainda.</td></tr>';
+
+        return `
+          <table>
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Data</th>
+                <th>Nome completo</th>
+                <th>Instituição</th>
+                <th>Cargo</th>
+                <th>E-mail</th>
+                <th>Período</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      }
+
+      function downloadFile(content, filename, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+
+      async function exportWord() {
+        const submissions = await getSubmissions();
+        const content = `
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="UTF-8" />
+              <style>
+                body { font-family: Arial, sans-serif; color: #17212b; }
+                h1 { font-size: 22px; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border: 1px solid #d7dee6; padding: 8px; text-align: left; }
+                th { background: #e8f1ff; }
+              </style>
+            </head>
+            <body>
+              <h1>Registros recebidos dos participantes</h1>
+              ${buildExportTable(submissions)}
+            </body>
+          </html>
+        `;
+
+        downloadFile(content, 'registros-participantes.doc', 'application/msword;charset=utf-8');
+      }
+
+      async function exportExcel() {
+        const headers = ['Título', 'Data', 'Nome completo', 'Instituição', 'Cargo', 'E-mail', 'Período'];
+        const rows = (await getSubmissions()).map((item) => [
+          item.eventTitle,
+          item.eventDate,
+          item.fullName,
+          item.institution,
+          item.role,
+          item.email,
+          item.period,
+        ]);
+        const csv = [headers, ...rows]
+          .map((row) => row.map((value) => `"${String(value || '').replaceAll('"', '""')}"`).join(','))
+          .join('\n');
+
+        downloadFile(csv, 'registros-participantes.csv', 'text/csv;charset=utf-8');
+      }
+
+      async function exportPdf() {
+        const submissions = await getSubmissions();
+        const printWindow = window.open('', '_blank');
+        const content = `
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="UTF-8" />
+              <title>Registros recebidos dos participantes</title>
+              <style>
+                body { font-family: Arial, sans-serif; color: #17212b; margin: 24px; }
+                h1 { font-size: 22px; margin-bottom: 16px; }
+                table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                th, td { border: 1px solid #d7dee6; padding: 7px; text-align: left; }
+                th { background: #e8f1ff; }
+              </style>
+            </head>
+            <body>
+              <h1>Registros recebidos dos participantes</h1>
+              ${buildExportTable(submissions)}
+              <script>
+                window.onload = () => {
+                  window.print();
+                };
+              <\/script>
+            </body>
+          </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(content);
+        printWindow.document.close();
+      }
+
+      eventForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const title = titleInput.value.trim();
+        const date = dateInput.value;
+
+        updatePublicHeader(title, date);
+
+        const url = buildFormUrl(title, date);
+        formLinkInput.value = url;
+        renderQrCode(url);
+        qrCard.classList.remove('is-hidden');
+      });
+
+      copyButton.addEventListener('click', async () => {
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(formLinkInput.value);
+        } else {
+          formLinkInput.select();
+          document.execCommand('copy');
+        }
+        copyButton.textContent = 'Copiado';
+        setTimeout(() => {
+          copyButton.textContent = 'Copiar';
+        }, 1800);
+      });
+
+      participantForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(participantForm);
+        const { title, date } = readQueryData();
+
+        await saveSubmission({
+          eventTitle: titleInput.value.trim() || title,
+          eventDate: dateInput.value || date,
+          fullName: formData.get('fullName'),
+          institution: formData.get('institution'),
+          role: formData.get('role'),
+          email: formData.get('email'),
+          period: formData.get('period'),
+        });
+
+        participantForm.reset();
+        successMessage.textContent = 'Preenchimento enviado com sucesso.';
+        successMessage.classList.remove('is-hidden');
+        await renderSubmissions();
+      });
+
+      exportWordButton.addEventListener('click', exportWord);
+      exportExcelButton.addEventListener('click', exportExcel);
+      exportPdfButton.addEventListener('click', exportPdf);
+
+      const queryData = readQueryData();
+      if (queryData.title || queryData.date) {
+        document.body.classList.add('public-mode');
+        titleInput.value = queryData.title;
+        dateInput.value = queryData.date;
+        updatePublicHeader(queryData.title, queryData.date);
+      } else {
+        updatePublicHeader('', '');
+        renderSubmissions();
+      }
+    </script>
+  </body>
+</html>
