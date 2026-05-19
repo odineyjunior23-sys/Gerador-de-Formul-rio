@@ -467,6 +467,13 @@
       </section>
 
       <section class="panel fill-panel" aria-labelledby="form-title">
+        <div class="brand-row">
+          <img
+            class="brand-logo"
+            src="assets/logo.png"
+            alt="Prefeitura de Maracaju - Secretaria Municipal de Educação"
+          />
+        </div>
         <div class="form-header">
           <p class="eyebrow">Formulário do participante</p>
           <h2 id="form-title">Aguardando título</h2>
@@ -539,6 +546,16 @@
 
       const STORAGE_KEY = 'qr-registration-submissions-html';
 
+      // ── Supabase ────────────────────────────────────────────────
+      const SUPABASE_URL  = 'https://bpeylqwmjhgtkxdrecsj.supabase.co/rest/v1';
+      const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwZXlscXdtamhndGt4ZHJlY3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNzY1NTEsImV4cCI6MjA5NDc1MjU1MX0.dLQM_nN8lyGpP5PnrUHcZ9HGq0bGznNVNQ-oAg-94G8';
+      const SB_HEADERS    = {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal',
+      };
+
       function formatDate(value) {
         if (!value) return 'Data não informada';
         const [year, month, day] = value.split('-');
@@ -585,11 +602,29 @@
         };
       }
 
+      // Mapeia snake_case do banco para camelCase usado no frontend
+      function mapRow(row) {
+        return {
+          eventTitle:  row.event_title,
+          eventDate:   row.event_date,
+          fullName:    row.full_name,
+          institution: row.institution,
+          role:        row.role,
+          email:       row.email,
+          period:      row.period,
+          submittedAt: row.submitted_at,
+        };
+      }
+
       async function getSubmissions() {
         try {
-          const response = await fetch('/api/submissions');
-          if (!response.ok) throw new Error(`API respondeu com status ${response.status}`);
-          return response.json();
+          const res = await fetch(
+            `${SUPABASE_URL}/submissions?order=submitted_at.desc`,
+            { headers: { ...SB_HEADERS, 'Prefer': '' } }
+          );
+          if (!res.ok) throw new Error(`Supabase ${res.status}`);
+          const rows = await res.json();
+          return rows.map(mapRow);
         } catch (error) {
           console.warn('Usando registros locais porque o Supabase não respondeu:', error);
           return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -598,22 +633,31 @@
 
       async function saveSubmission(data) {
         const payload = {
-          ...data,
-          submittedAt: new Date().toISOString(),
+          event_title:  data.eventTitle,
+          event_date:   data.eventDate,
+          full_name:    data.fullName,
+          institution:  data.institution,
+          role:         data.role,
+          email:        data.email,
+          period:       data.period,
+          submitted_at: new Date().toISOString(),
         };
 
         try {
-          const response = await fetch('/api/submissions', {
+          const res = await fetch(`${SUPABASE_URL}/submissions`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: SB_HEADERS,
             body: JSON.stringify(payload),
           });
-          if (!response.ok) throw new Error(`API respondeu com status ${response.status}`);
+          if (!res.ok) {
+            const err = await res.text();
+            throw new Error(`Supabase ${res.status}: ${err}`);
+          }
         } catch (error) {
           console.warn('Salvando localmente porque o Supabase não aceitou o registro:', error);
-          const submissions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-          submissions.push(payload);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(submissions));
+          const local = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          local.push({ ...data, submittedAt: payload.submitted_at });
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(local));
         }
       }
 
