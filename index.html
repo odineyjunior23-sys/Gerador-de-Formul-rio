@@ -1383,27 +1383,9 @@
         });
       }
 
-      // ── Supabase Realtime ────────────────────────────────────────
+      // ── Atualização automática a cada 10 segundos ───────────────
       function initRealtime() {
-        if (typeof supabase === 'undefined') {
-          console.warn('Supabase JS não carregou; sem realtime.');
-          return;
-        }
-
-        const client = supabase.createClient(SUPABASE_PROJECT, SUPABASE_KEY);
-
-        client
-          .channel('submissions-live')
-          .on(
-            'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'submissions' },
-            (payload) => {
-              const row  = payload.new;
-              const item = mapRow(row);
-              addRowToTable(item);
-            }
-          )
-          .subscribe();
+        setInterval(renderSubmissions, 10000);
       }
 
       const queryData = readQueryData();
