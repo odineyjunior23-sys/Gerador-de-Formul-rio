@@ -441,6 +441,11 @@
           aspect-ratio: 1;
         }
       }
+      /* Nova linha destaque */
+      .row-new td {
+        animation: row-highlight 3s ease-out forwards;
+      }
+
     </style>
   </head>
   <body>
@@ -498,7 +503,7 @@
               <p class="eyebrow">Registros recebidos</p>
               <h2>Participantes</h2>
             </div>
-            <div class="export-actions" aria-label="Opções de exportação">
+<div class="export-actions" aria-label="Opções de exportação">
               <button id="export-word" class="secondary-button" type="button">Word</button>
               <button id="export-excel" class="secondary-button" type="button">Excel</button>
               <button id="export-pdf" class="secondary-button" type="button">PDF</button>
@@ -626,6 +631,7 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docx@9.6.1/dist/index.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script>
       const eventForm = document.querySelector('#event-form');
       const participantForm = document.querySelector('#participant-form');
@@ -647,7 +653,8 @@
       const STORAGE_KEY = 'qr-registration-submissions-html';
 
       // ── Supabase ────────────────────────────────────────────────
-      const SUPABASE_URL  = 'https://bpeylqwmjhgtkxdrecsj.supabase.co/rest/v1';
+      const SUPABASE_URL     = 'https://bpeylqwmjhgtkxdrecsj.supabase.co/rest/v1';
+      const SUPABASE_PROJECT = 'https://bpeylqwmjhgtkxdrecsj.supabase.co';
       const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwZXlscXdtamhndGt4ZHJlY3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNzY1NTEsImV4cCI6MjA5NDc1MjU1MX0.dLQM_nN8lyGpP5PnrUHcZ9HGq0bGznNVNQ-oAg-94G8';
       const SB_HEADERS = {
         'Content-Type': 'application/json',
@@ -818,13 +825,19 @@
           .join('');
       }
 
-      // Insere uma linha instantaneamente na tabela sem precisar recarregar do Supabase
+      // Insere uma linha na tabela respeitando o filtro de data ativo
       function addRowToTable(item) {
+        const filterDate = document.querySelector('#filter-date')?.value || '';
+
+        // Se há filtro ativo e o novo registro não é desse dia, ignora
+        if (filterDate && item.eventDate !== filterDate) return;
+
         // Remove mensagem de "nenhum preenchimento" se existir
         const emptyRow = recordsBody.querySelector('td[colspan]');
         if (emptyRow) emptyRow.closest('tr').remove();
 
         const tr = document.createElement('tr');
+        tr.classList.add('row-new');
         tr.innerHTML = `
           <td>${escapeHtml(item.fullName)}</td>
           <td>${escapeHtml(item.institution)}</td>
@@ -832,6 +845,19 @@
         `;
         // Insere no topo da tabela (mais recente primeiro)
         recordsBody.insertBefore(tr, recordsBody.firstChild);
+
+        // Remove animação após 3s
+        setTimeout(() => tr.classList.remove('row-new'), 3000);
+
+        // Atualiza badge do filtro se ativo
+        if (filterDate) {
+          const badge = document.querySelector('#filter-count');
+          if (badge && badge.style.display !== 'none') {
+            const current = parseInt(badge.textContent) || 0;
+            const newCount = current + 1;
+            badge.textContent = `${newCount} participante${newCount !== 1 ? 's' : ''} em ${formatDate(filterDate)}`;
+          }
+        }
       }
 
       // Imprime apenas o QR Code com título e data do evento
@@ -1357,6 +1383,29 @@
         });
       }
 
+      // ── Supabase Realtime ────────────────────────────────────────
+      function initRealtime() {
+        if (typeof supabase === 'undefined') {
+          console.warn('Supabase JS não carregou; sem realtime.');
+          return;
+        }
+
+        const client = supabase.createClient(SUPABASE_PROJECT, SUPABASE_KEY);
+
+        client
+          .channel('submissions-live')
+          .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'submissions' },
+            (payload) => {
+              const row  = payload.new;
+              const item = mapRow(row);
+              addRowToTable(item);
+            }
+          )
+          .subscribe();
+      }
+
       const queryData = readQueryData();
       if (queryData.title || queryData.date) {
         document.body.classList.add('public-mode');
@@ -1366,6 +1415,7 @@
       } else {
         updatePublicHeader('', '');
         renderSubmissions();
+        initRealtime();
       }
     </script>
   </body>
