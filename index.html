@@ -518,18 +518,27 @@
             <button id="clear-filter" class="secondary-button filter-clear-btn" type="button" style="display:none;">✕ Limpar filtro</button>
             <span id="filter-count" class="filter-count" style="display:none;"></span>
           </div>
+          <div class="filter-row">
+            <label class="filter-label" for="filter-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Filtrar por nome do encontro:
+            </label>
+            <input id="filter-title" type="text" class="filter-input" placeholder="Digite parte do nome..." aria-label="Filtrar por nome do encontro" style="flex:1;min-width:180px;" />
+            <button id="clear-filter-title" class="secondary-button filter-clear-btn" type="button" style="display:none;">✕ Limpar</button>
+          </div>
           <div class="records-table-wrap">
             <table>
               <thead>
                 <tr>
+                  <th>Encontro</th>
                   <th>Nome</th>
                   <th>Instituição</th>
-                  <th>Período</th>
+                  <th>Período em que participou</th>
                 </tr>
               </thead>
               <tbody id="records-body">
                 <tr>
-                  <td colspan="3">Nenhum preenchimento recebido ainda.</td>
+                <td colspan="4">Nenhum preenchimento recebido ainda.</td>
                 </tr>
               </tbody>
             </table>
@@ -604,7 +613,7 @@
           </label>
 
           <fieldset>
-            <legend>Período</legend>
+            <legend>Período em que participou</legend>
             <div class="period-grid">
               <label class="period-option">
                 <input type="radio" name="period" value="Matutino" required />
@@ -787,14 +796,17 @@
 
       async function renderSubmissions() {
         const allSubmissions = await getSubmissions();
-        const filterDateEl = document.querySelector('#filter-date');
-        const filterCount  = document.querySelector('#filter-count');
-        const clearBtn     = document.querySelector('#clear-filter');
-        const filterDate   = filterDateEl ? filterDateEl.value : '';
+        const filterDateEl  = document.querySelector('#filter-date');
+        const filterTitleEl = document.querySelector('#filter-title');
+        const filterCount   = document.querySelector('#filter-count');
+        const clearBtn      = document.querySelector('#clear-filter');
+        const clearTitleBtn = document.querySelector('#clear-filter-title');
+        const filterDate    = filterDateEl  ? filterDateEl.value.trim()  : '';
+        const filterTitle   = filterTitleEl ? filterTitleEl.value.trim().toLowerCase() : '';
 
-        const submissions = filterDate
-          ? allSubmissions.filter(item => item.eventDate === filterDate)
-          : allSubmissions;
+        let submissions = allSubmissions;
+        if (filterDate)  submissions = submissions.filter(item => item.eventDate === filterDate);
+        if (filterTitle) submissions = submissions.filter(item => (item.eventTitle || '').toLowerCase().includes(filterTitle));
 
         if (filterDate) {
           clearBtn.style.display = '';
@@ -805,10 +817,14 @@
           filterCount.style.display = 'none';
         }
 
+        if (clearTitleBtn) {
+          clearTitleBtn.style.display = filterTitle ? '' : 'none';
+        }
+
         if (!submissions.length) {
-          recordsBody.innerHTML = filterDate
-            ? `<tr><td colspan="3">Nenhum participante encontrado para ${formatDate(filterDate)}.</td></tr>`
-            : '<tr><td colspan="3">Nenhum preenchimento recebido ainda.</td></tr>';
+          recordsBody.innerHTML = (filterDate || filterTitle)
+            ? `<tr><td colspan="4">Nenhum participante encontrado para os filtros aplicados.</td></tr>`
+            : '<tr><td colspan="4">Nenhum preenchimento recebido ainda.</td></tr>';
           return;
         }
 
@@ -816,6 +832,7 @@
           .map(
             (item) => `
               <tr>
+                <td>${escapeHtml(item.eventTitle || '—')}</td>
                 <td>${escapeHtml(item.fullName)}</td>
                 <td>${escapeHtml(item.institution)}</td>
                 <td>${escapeHtml(item.period)}</td>
@@ -839,6 +856,7 @@
         const tr = document.createElement('tr');
         tr.classList.add('row-new');
         tr.innerHTML = `
+          <td>${escapeHtml(item.eventTitle || '—')}</td>
           <td>${escapeHtml(item.fullName)}</td>
           <td>${escapeHtml(item.institution)}</td>
           <td>${escapeHtml(item.period)}</td>
@@ -937,7 +955,7 @@
 
       async function exportCsv() {
         const submissions = await getSubmissions();
-        const headers = ['Título', 'Data', 'Nome completo', 'Instituição', 'Cargo', 'E-mail', 'Período'];
+        const headers = ['Título', 'Data', 'Nome completo', 'Instituição', 'Cargo', 'E-mail', 'Período em que participou'];
         const rows = submissions.map((item) => [
           item.eventTitle,
           item.eventDate,
@@ -988,7 +1006,7 @@
                 <th>Instituição</th>
                 <th>Cargo</th>
                 <th>E-mail</th>
-                <th>Período</th>
+                <th>Período em que participou</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
@@ -1008,8 +1026,12 @@
 
       async function getFilteredSubmissions() {
         const all = await getSubmissions();
-        const filterDate = document.querySelector('#filter-date')?.value || '';
-        return filterDate ? all.filter(item => item.eventDate === filterDate) : all;
+        const filterDate  = document.querySelector('#filter-date')?.value.trim()  || '';
+        const filterTitle = (document.querySelector('#filter-title')?.value.trim() || '').toLowerCase();
+        let result = all;
+        if (filterDate)  result = result.filter(item => item.eventDate === filterDate);
+        if (filterTitle) result = result.filter(item => (item.eventTitle || '').toLowerCase().includes(filterTitle));
+        return result;
       }
 
             async function exportWord() {
@@ -1047,7 +1069,7 @@
           // Largura útil: 16838 - 720*2 = 15398 DXA
           // Colunas:  Nome | Instituição | Cargo | E-mail | Período | Data
           const colWidths = [3000, 3400, 2200, 3300, 1500, 1300]; // total 14700
-          const HEADERS   = ['Nome completo', 'Instituição', 'Cargo', 'E-mail', 'Período', 'Data'];
+          const HEADERS   = ['Nome completo', 'Instituição', 'Cargo', 'E-mail', 'Período em que participou', 'Data'];
 
           const cellBorder = { style: BorderStyle.SINGLE, size: 4, color: 'CCCCCC' };
           const borders    = {
@@ -1185,7 +1207,7 @@
         const submissions = await getFilteredSubmissions();
         if (!submissions.length) { alert('Nenhum registro encontrado para exportar.'); return; }
 
-        const headers = ['Título', 'Data', 'Nome completo', 'Instituição', 'Cargo', 'E-mail', 'Período'];
+        const headers = ['Título', 'Data', 'Nome completo', 'Instituição', 'Cargo', 'E-mail', 'Período em que participou'];
 
         const rows = submissions.map(item => [
           item.eventTitle,
@@ -1322,8 +1344,8 @@
           : formData.get('institution');
 
         const submission = {
-          eventTitle: titleInput.value.trim() || title,
-          eventDate: dateInput.value || date,
+          eventTitle: title || titleInput.value.trim(),
+          eventDate: date || dateInput.value,
           fullName: formData.get('fullName'),
           institution: institutionVal,
           role: formData.get('role'),
@@ -1379,6 +1401,23 @@
       if (clearFilterBtn) {
         clearFilterBtn.addEventListener('click', () => {
           filterDateInput.value = '';
+          renderSubmissions();
+        });
+      }
+
+      // ── Filtro por nome do encontro ─────────────────────────────
+      const filterTitleInput  = document.querySelector('#filter-title');
+      const clearTitleFilterBtn = document.querySelector('#clear-filter-title');
+
+      if (filterTitleInput) {
+        filterTitleInput.addEventListener('input', () => {
+          renderSubmissions();
+        });
+      }
+
+      if (clearTitleFilterBtn) {
+        clearTitleFilterBtn.addEventListener('click', () => {
+          filterTitleInput.value = '';
           renderSubmissions();
         });
       }
