@@ -446,6 +446,275 @@
         animation: row-highlight 3s ease-out forwards;
       }
 
+      /* ══════════════ COMPROVANTE ══════════════ */
+      .comprovante-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(23, 33, 43, 0.72);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 16px;
+        backdrop-filter: blur(4px);
+      }
+
+      .comprovante-overlay.is-hidden {
+        display: none;
+      }
+
+      .comprovante-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+        max-width: 480px;
+        max-height: 95vh;
+        overflow-y: auto;
+      }
+
+      .comprovante-card {
+        background: #ffffff;
+        border-radius: 20px;
+        width: 100%;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        font-family: Arial, sans-serif;
+      }
+
+      /* Cabeçalho azul com logo */
+      .comp-header {
+        background: linear-gradient(135deg, #003C7E 0%, #1565C0 100%);
+        padding: 24px 28px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .comp-logo {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+        background: #fff;
+        border-radius: 10px;
+        padding: 4px;
+        flex-shrink: 0;
+      }
+
+      .comp-header-text {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .comp-orgao {
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .comp-cidade {
+        color: rgba(255,255,255,0.75);
+        font-size: 0.8rem;
+      }
+
+      /* Check verde estilo PIX */
+      .comp-check-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 28px 24px 20px;
+        gap: 6px;
+      }
+
+      .comp-check-circle {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 4px;
+      }
+
+      .comp-check-svg {
+        width: 100%;
+        height: 100%;
+        animation: check-pop 0.45s cubic-bezier(.2,1.3,.5,1) both;
+      }
+
+      @keyframes check-pop {
+        from { opacity: 0; transform: scale(0.4); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+
+      .comp-check-label {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #17212b;
+        margin: 0;
+      }
+
+      .comp-check-sub {
+        font-size: 0.82rem;
+        color: #5d6b78;
+        margin: 0;
+      }
+
+      /* Divisor pontilhado */
+      .comp-divider {
+        border: none;
+        border-top: 2px dashed #d7dee6;
+        margin: 0 24px;
+        position: relative;
+      }
+      .comp-divider::before,
+      .comp-divider::after {
+        content: '';
+        position: absolute;
+        top: -10px;
+        width: 18px;
+        height: 18px;
+        background: rgba(23,33,43,0.6);
+        border-radius: 50%;
+      }
+      .comp-divider::before { left: -34px; }
+      .comp-divider::after  { right: -34px; }
+
+      /* Box do evento em destaque */
+      .comp-evento-box {
+        background: #EBF2FF;
+        border-left: 4px solid #1565C0;
+        margin: 20px 24px 4px;
+        border-radius: 8px;
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .comp-evento-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #1565C0;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .comp-evento-titulo {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #17212b;
+        line-height: 1.3;
+      }
+
+      /* Linhas de dados */
+      .comp-rows {
+        padding: 12px 24px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .comp-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 11px 0;
+        border-bottom: 1px solid #f0f3f7;
+      }
+
+      .comp-row:last-child {
+        border-bottom: none;
+      }
+
+      .comp-row-icon {
+        font-size: 1.1rem;
+        line-height: 1;
+        padding-top: 2px;
+        flex-shrink: 0;
+        width: 22px;
+        text-align: center;
+      }
+
+      .comp-row-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .comp-row-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #5d6b78;
+      }
+
+      .comp-row-value {
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: #17212b;
+        word-break: break-word;
+      }
+
+      /* Rodapé */
+      .comp-footer {
+        background: #f4f6f9;
+        padding: 14px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        text-align: center;
+      }
+
+      .comp-codigo {
+        font-size: 0.72rem;
+        font-family: 'Courier New', monospace;
+        color: #5d6b78;
+        letter-spacing: 0.08em;
+      }
+
+      .comp-footer-text {
+        font-size: 0.68rem;
+        color: #8a97a3;
+      }
+
+      /* Botões de ação */
+      .comp-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+      }
+
+      .comp-btn-pdf {
+        font-size: 1rem;
+        padding: 14px 20px;
+        border-radius: 12px;
+      }
+
+      @media (max-width: 520px) {
+        .comp-header {
+          padding: 18px 20px 16px;
+        }
+        .comp-logo {
+          width: 56px;
+          height: 56px;
+        }
+        .comp-evento-box,
+        .comp-rows {
+          margin-left: 16px;
+          margin-right: 16px;
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+        .comp-divider {
+          margin: 0 16px;
+        }
+      }
+
     </style>
   </head>
   <body>
@@ -636,6 +905,114 @@
         <div id="success-message" class="success-message is-hidden" role="status"></div>
       </section>
     </main>
+
+    <!-- ══════════════ TELA DE COMPROVANTE ══════════════ -->
+    <div id="comprovante-overlay" class="comprovante-overlay is-hidden" role="dialog" aria-modal="true" aria-labelledby="comp-title">
+      <div class="comprovante-wrapper">
+
+        <!-- Cartão do comprovante (área impressa/exportada) -->
+        <div id="comprovante-card" class="comprovante-card">
+
+          <!-- Cabeçalho com logo -->
+          <div class="comp-header">
+            <img class="comp-logo" src="assets/logo.png" alt="Prefeitura de Maracaju – Secretaria Municipal de Educação" onerror="this.style.display='none'" />
+            <div class="comp-header-text">
+              <span class="comp-orgao">Secretaria Municipal de Educação</span>
+              <span class="comp-cidade">Prefeitura de Maracaju – MS</span>
+            </div>
+          </div>
+
+          <!-- Ícone de check estilo PIX -->
+          <div class="comp-check-area">
+            <div class="comp-check-circle">
+              <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg" class="comp-check-svg">
+                <circle cx="26" cy="26" r="25" fill="none" stroke="#27ae60" stroke-width="2"/>
+                <path d="M14 26 L22 34 L38 18" fill="none" stroke="#27ae60" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h2 id="comp-title" class="comp-check-label">Presença Confirmada</h2>
+            <p class="comp-check-sub">Comprovante de participação</p>
+          </div>
+
+          <!-- Divisor pontilhado -->
+          <div class="comp-divider"></div>
+
+          <!-- Título do encontro em destaque -->
+          <div class="comp-evento-box">
+            <span class="comp-evento-label">Encontro / Evento</span>
+            <span id="comp-evento" class="comp-evento-titulo">—</span>
+          </div>
+
+          <!-- Linha de dados -->
+          <div class="comp-rows">
+            <div class="comp-row">
+              <span class="comp-row-icon">👤</span>
+              <div class="comp-row-content">
+                <span class="comp-row-label">Nome completo</span>
+                <span id="comp-nome" class="comp-row-value">—</span>
+              </div>
+            </div>
+            <div class="comp-row">
+              <span class="comp-row-icon">🏫</span>
+              <div class="comp-row-content">
+                <span class="comp-row-label">Instituição</span>
+                <span id="comp-instituicao" class="comp-row-value">—</span>
+              </div>
+            </div>
+            <div class="comp-row">
+              <span class="comp-row-icon">💼</span>
+              <div class="comp-row-content">
+                <span class="comp-row-label">Cargo</span>
+                <span id="comp-cargo" class="comp-row-value">—</span>
+              </div>
+            </div>
+            <div class="comp-row">
+              <span class="comp-row-icon">✉️</span>
+              <div class="comp-row-content">
+                <span class="comp-row-label">E-mail</span>
+                <span id="comp-email" class="comp-row-value">—</span>
+              </div>
+            </div>
+            <div class="comp-row">
+              <span class="comp-row-icon">🕐</span>
+              <div class="comp-row-content">
+                <span class="comp-row-label">Período em que participou</span>
+                <span id="comp-periodo" class="comp-row-value">—</span>
+              </div>
+            </div>
+            <div class="comp-row">
+              <span class="comp-row-icon">📅</span>
+              <div class="comp-row-content">
+                <span class="comp-row-label">Data do encontro</span>
+                <span id="comp-data" class="comp-row-value">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Divisor pontilhado inferior -->
+          <div class="comp-divider"></div>
+
+          <!-- Rodapé -->
+          <div class="comp-footer">
+            <span id="comp-codigo" class="comp-codigo">—</span>
+            <span class="comp-footer-text">Emitido automaticamente pelo Sistema de Controle de Presença</span>
+          </div>
+
+        </div>
+        <!-- /comprovante-card -->
+
+        <!-- Botões de ação (fora do card, não entram no PDF) -->
+        <div class="comp-actions">
+          <button id="btn-baixar-pdf" class="primary-button comp-btn-pdf" type="button">
+            ⬇️&nbsp; Baixar comprovante em PDF
+          </button>
+          <button id="btn-fechar-comp" class="secondary-button" type="button">
+            Voltar ao formulário
+          </button>
+        </div>
+
+      </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -1334,6 +1711,156 @@
         }, 1800);
       });
 
+      // ── Comprovante ─────────────────────────────────────────────
+      const comprovanteOverlay = document.querySelector('#comprovante-overlay');
+      const btnBaixarPdf       = document.querySelector('#btn-baixar-pdf');
+      const btnFecharComp      = document.querySelector('#btn-fechar-comp');
+
+      function gerarCodigo(nome) {
+        const ts   = Date.now().toString(36).toUpperCase();
+        const init = (nome || 'XX').trim().substring(0, 2).toUpperCase();
+        const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+        return `COMP-${init}${ts}-${rand}`;
+      }
+
+      function mostrarComprovante(submission) {
+        document.querySelector('#comp-evento').textContent     = submission.eventTitle || '—';
+        document.querySelector('#comp-nome').textContent       = submission.fullName   || '—';
+        document.querySelector('#comp-instituicao').textContent = submission.institution || '—';
+        document.querySelector('#comp-cargo').textContent      = submission.role       || '—';
+        document.querySelector('#comp-email').textContent      = submission.email      || '—';
+        document.querySelector('#comp-periodo').textContent    = submission.period     || '—';
+        document.querySelector('#comp-data').textContent       = formatDate(submission.eventDate) || '—';
+        document.querySelector('#comp-codigo').textContent     = gerarCodigo(submission.fullName);
+        comprovanteOverlay.classList.remove('is-hidden');
+        comprovanteOverlay.scrollTop = 0;
+      }
+
+      btnFecharComp && btnFecharComp.addEventListener('click', () => {
+        comprovanteOverlay.classList.add('is-hidden');
+      });
+
+      // Fecha ao clicar no overlay (fora do card)
+      comprovanteOverlay && comprovanteOverlay.addEventListener('click', (e) => {
+        if (e.target === comprovanteOverlay) comprovanteOverlay.classList.add('is-hidden');
+      });
+
+      btnBaixarPdf && btnBaixarPdf.addEventListener('click', () => {
+        const card = document.querySelector('#comprovante-card');
+        if (!card) return;
+
+        // Esconde os botões do overlay para a impressão não aparecer
+        const actions = document.querySelector('.comp-actions');
+        const prevDisplay = actions ? actions.style.display : '';
+        if (actions) actions.style.display = 'none';
+
+        // Usa window.print() com estilo otimizado para o card
+        const nome    = document.querySelector('#comp-nome').textContent.trim().replace(/\s+/g,'_');
+        const evento  = document.querySelector('#comp-evento').textContent.trim().substring(0, 30).replace(/\s+/g,'_');
+        const cardHtml = card.outerHTML;
+
+        const win = window.open('', '_blank', 'width=600,height=800');
+        win.document.write(`
+          <!doctype html><html lang="pt-BR">
+          <head>
+            <meta charset="UTF-8"/>
+            <title>Comprovante – ${escapeHtml(nome)}</title>
+            <style>
+              * { box-sizing: border-box; margin: 0; padding: 0; }
+              body {
+                background: #f0f4fa;
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                padding: 32px 16px;
+                font-family: Arial, sans-serif;
+              }
+              .comprovante-card {
+                background: #ffffff;
+                border-radius: 20px;
+                width: 100%;
+                max-width: 480px;
+                overflow: hidden;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+              }
+              .comp-header {
+                background: linear-gradient(135deg, #003C7E 0%, #1565C0 100%);
+                padding: 24px 28px 20px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+              }
+              .comp-logo {
+                width: 72px; height: 72px;
+                object-fit: contain;
+                background: #fff;
+                border-radius: 10px;
+                padding: 4px;
+                flex-shrink: 0;
+              }
+              .comp-header-text { display: flex; flex-direction: column; gap: 3px; }
+              .comp-orgao { color:#fff; font-size:0.95rem; font-weight:700; }
+              .comp-cidade { color:rgba(255,255,255,.75); font-size:0.8rem; }
+              .comp-check-area {
+                display: flex; flex-direction: column; align-items: center;
+                padding: 28px 24px 20px; gap: 6px;
+              }
+              .comp-check-circle { width:64px; height:64px; margin-bottom:4px; }
+              .comp-check-svg { width:100%; height:100%; }
+              .comp-check-label { font-size:1.3rem; font-weight:800; color:#17212b; }
+              .comp-check-sub   { font-size:0.82rem; color:#5d6b78; }
+              .comp-divider {
+                border: none; border-top: 2px dashed #d7dee6;
+                margin: 0 24px; position: relative;
+              }
+              .comp-divider::before, .comp-divider::after {
+                content:''; position:absolute; top:-10px;
+                width:18px; height:18px;
+                background: #f0f4fa; border-radius:50%;
+              }
+              .comp-divider::before { left:-34px; }
+              .comp-divider::after  { right:-34px; }
+              .comp-evento-box {
+                background:#EBF2FF; border-left:4px solid #1565C0;
+                margin:20px 24px 4px; border-radius:8px; padding:12px 16px;
+                display:flex; flex-direction:column; gap:3px;
+              }
+              .comp-evento-label { font-size:0.7rem; font-weight:700; color:#1565C0; text-transform:uppercase; letter-spacing:.06em; }
+              .comp-evento-titulo { font-size:1rem; font-weight:700; color:#17212b; line-height:1.3; }
+              .comp-rows { padding:12px 24px 20px; display:flex; flex-direction:column; gap:0; }
+              .comp-row { display:flex; align-items:flex-start; gap:12px; padding:11px 0; border-bottom:1px solid #f0f3f7; }
+              .comp-row:last-child { border-bottom:none; }
+              .comp-row-icon { font-size:1.1rem; padding-top:2px; flex-shrink:0; width:22px; text-align:center; }
+              .comp-row-content { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+              .comp-row-label { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#5d6b78; }
+              .comp-row-value { font-size:0.92rem; font-weight:600; color:#17212b; word-break:break-word; }
+              .comp-footer {
+                background:#f4f6f9; padding:14px 24px;
+                display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center;
+              }
+              .comp-codigo { font-size:0.72rem; font-family:'Courier New',monospace; color:#5d6b78; letter-spacing:.08em; }
+              .comp-footer-text { font-size:0.68rem; color:#8a97a3; }
+              @media print {
+                body { background:#fff; padding:0; }
+                .comprovante-card { box-shadow:none; border-radius:0; max-width:100%; }
+                @page { margin: 10mm; size: A5 portrait; }
+              }
+            </style>
+          </head>
+          <body>${cardHtml}
+            <script>
+              // Corrige o caminho da logo para absoluto
+              const logo = document.querySelector('.comp-logo');
+              if (logo) logo.src = '${window.location.origin}/assets/logo.png';
+              window.onload = () => { setTimeout(() => { window.print(); }, 300); };
+            <\/script>
+          </body></html>
+        `);
+        win.document.close();
+
+        if (actions) actions.style.display = prevDisplay;
+      });
+
       participantForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formData = new FormData(participantForm);
@@ -1357,9 +1884,9 @@
         addRowToTable(submission);
 
         participantForm.reset();
-        successMessage.textContent = 'Preenchimento enviado com sucesso!';
-        successMessage.classList.remove('is-hidden');
-        setTimeout(() => successMessage.classList.add('is-hidden'), 4000);
+
+        // Mostra o comprovante em vez da mensagem simples
+        mostrarComprovante(submission);
 
         // Salva no Supabase em segundo plano
         await saveSubmission(submission);
