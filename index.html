@@ -452,11 +452,12 @@
         inset: 0;
         background: rgba(23, 33, 43, 0.72);
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         z-index: 9999;
-        padding: 16px;
+        padding: 24px 16px;
         backdrop-filter: blur(4px);
+        overflow-y: auto;
       }
 
       .comprovante-overlay.is-hidden {
@@ -470,8 +471,23 @@
         gap: 16px;
         width: 100%;
         max-width: 480px;
-        max-height: 95vh;
-        overflow-y: auto;
+        margin: auto;
+      }
+
+      /* Barra de rolagem estilizada */
+      .comprovante-overlay::-webkit-scrollbar {
+        width: 8px;
+      }
+      .comprovante-overlay::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+      }
+      .comprovante-overlay::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.45);
+        border-radius: 4px;
+      }
+      .comprovante-overlay::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.7);
       }
 
       .comprovante-card {
